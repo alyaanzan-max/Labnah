@@ -6,250 +6,307 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- حالة التطبيق (Session State) ---
+# --- بنك المشاريع المتعددة ---
+PROJECTS = {
+    "سيارة تتفادى العقبات (2WD Smart Car)": {
+        "level": "مبتدئ - متوسط",
+        "summary": "روبوت بعجلتين يستخدم حساس مسافة لتفادي العوائق وتغيير المسار تلقائياً.",
+        "parts": ["ESP32", "L298N Motor Driver", "Ultrasonic Sensor", "DC Motors"],
+        "steps": [
+            {
+                "title": "الخطوة 1: تجهيز التوصيل الكهربائي وخط الأرضي المشترك",
+                "task": "ثبّت القطع على الهيكل، ووصّل مداخل المحركات بالبطاقة، وتأكد من توحيد GND بين المتحكم والبطاقة.",
+                "check": "هل تأكدت من أن الأسلاك مثبتة بإحكام وأن البطارية غير موصولة أثناء التوصيل؟",
+            },
+            {
+                "title": "الخطوة 2: اختبار حركة العجلات للأمام والخلف",
+                "task": "اكتب كود اختبار بسيط يفعّل المحرك الأيمن والأيسر لثوانٍ للتأكد من اتجاه الدوران.",
+                "check": "هل تدور العجلات بالاتجاه الصحيح دون اهتزاز أو توقف مفاجئ؟",
+            },
+            {
+                "title": "الخطوة 3: قراءة المسافة من الحساس",
+                "task": "وصّل حساس المسافة واقرأ القيم بالسنتيمتر للتأكد من استجابته أمام العائق.",
+                "check": "هل تظهر قراءات المسافة وتتغير بوضوح عند تقريب جسم أمام الحساس؟",
+            },
+            {
+                "title": "الخطوة 4: ربط قرار التفادي بالحركة",
+                "task": "أضف شرطاً: إذا قلّت المسافة عن حد معين، توقف السيارة وتلف لليمين أو اليسار ثم تكمل.",
+                "check": "هل تتفادى السيارة العائق وتكمل طريقها بدون ما تعلق؟",
+            },
+        ],
+    },
+    "محطة مراقبة ذكية للتربة والنبات": {
+        "level": "مبتدئ",
+        "summary": "نظام يقرأ رطوبة التربة ويعطي تنبيهاً أو يشغّل مضخة صغيرة عند الحاجة.",
+        "parts": ["ESP32", "Soil Moisture Sensor", "Relay Module", "Water Pump"],
+        "steps": [
+            {
+                "title": "الخطوة 1: قراءة رطوبة التربة في التربة الجافة والرطبة",
+                "task": "اقرأ قيمة الحساس وهو في الهواء ثم في تربة رطبة لتعرف المدى الفعلي للقراءات.",
+                "check": "هل لاحظت فرقاً واضحاً بين القراءة في الجفاف والرطوبة؟",
+            },
+            {
+                "title": "الخطوة 2: تحديد عتبة التنبيه أو الري",
+                "task": "اختر رقماً مناسباً يمثل بداية جفاف التربة بناءً على تجاربك السابقة.",
+                "check": "هل حددت قيمة واضحة قبل ربطها بالتحكم؟",
+            },
+            {
+                "title": "الخطوة 3: اختبار التحكم بالري أو التنبيه",
+                "task": "اربط القراءة بالمنبه أو المضخة مع فصلها عن دوائر التحكم الحساسة.",
+                "check": "هل يستجيب النظام فقط عندما تتجاوز القراءة الحد المحدد؟",
+            },
+        ],
+    },
+    "منصة تنسيق مهام برمجية صغيرة (لَبِنَة)": {
+        "level": "متوسط",
+        "summary": "تطبيق ويب يقسّم المهام البرمجية إلى خطوات صغيرة ويساعد المبرمج على التنفيذ والمتابعة.",
+        "parts": ["Python", "Streamlit", "GitHub"],
+        "steps": [
+            {
+                "title": "الخطوة 1: تحديد قائمة المهام وحالتها",
+                "task": "أنشئ قائمة بالمهام بحيث يكون لكل مهمة عنوان ووصف وحالة (قيد التنفيذ / مكتملة).",
+                "check": "هل تستطيع عرض المهام وتحديث حالتها دون أخطاء؟",
+            },
+            {
+                "title": "الخطوة 2: بناء التنقل بين الخطوات",
+                "task": "أضف زر انتقال يحدّث الخطوة الحالية ويحفظ التقدم للمستخدم.",
+                "check": "هل ينتقل المستخدم للخطوة التالية ويحتفظ بحالته الحالية؟",
+            },
+            {
+                "title": "الخطوة 3: مراجعة الواجهة ورفع النسخة",
+                "task": "تأكد من وضوح النصوص والأزرار ثم ارفع التعديلات على المستودع.",
+                "check": "هل تعمل الصفحة كاملة بدون رسائل خطأ؟",
+            },
+        ],
+    },
+}
+
+# --- قصص القطع (تظهر فقط عند الطلب أو في قسم المسح) ---
+PART_STORIES = {
+    "ESP32": "متحكم يجمع بين المعالجة والاتصال اللاسلكي (Wi-Fi / Bluetooth) في شريحة واحدة، مما يجعله مناسباً للمشاريع المتصلة والذكية.",
+    "L298N Motor Driver": "بطاقة تشغيل محركات تعتمد على جسر H للتحكم في اتجاه وسرعة محركات التيار المستمر عبر إشارات منخفضة القدرة من المتحكم.",
+    "Ultrasonic Sensor": "حساس يرسل موجات فوق صوتية ويحسب الزمن المستغرق لعودة الصدى لتقدير المسافة أمامه.",
+    "Soil Moisture Sensor": "حساس يقيس تغير التوصيل أو السعة في التربة لتقدير مستوى الرطوبة حول الجذور.",
+    "Relay Module": "مفتاح إلكتروني يسمح لدائرة تحكم منخفضة الجهد بفتح أو إغلاق دائرة أخرى ذات حمل أعلى بأمان.",
+}
+
+# --- Session State ---
+if "selected_project" not in st.session_state:
+    st.session_state.selected_project = "سيارة تتفادى العقبات (2WD Smart Car)"
+
+if "step_index" not in st.session_state:
+    st.session_state.step_index = 0
+
 if "points" not in st.session_state:
-    st.session_state.points = 450
+    st.session_state.points = 0
 
-if "completed_blocks" not in st.session_state:
-    st.session_state.completed_blocks = [
-        {
-            "title": "تجهيز الهيكل وتحديد مسار الحركة",
-            "story_note": "تجاوزت أول تجربة وضبطت اتجاه العجلات بدقة.",
-            "points": 250,
-        }
-    ]
+if "scanned_parts" not in st.session_state:
+    st.session_state.scanned_parts = ["ESP32", "L298N Motor Driver"]
 
-if "detected_parts" not in st.session_state:
-    st.session_state.detected_parts = ["ESP32", "L298N Motor Driver", "Ultrasonic Sensor"]
-
-if "current_block" not in st.session_state:
-    st.session_state.current_block = "توصيل المحركات ببطاقة L298N"
-
-# --- تنسيق خفيف لتحسين الشكل ---
+# --- تنسيق أزرق مريح للعين ---
 st.markdown(
     """
     <style>
-    .hero-box {
-        background: linear-gradient(135deg, #0A192F 0%, #112240 100%);
-        color: #F8F9FA;
-        padding: 20px;
-        border-radius: 14px;
-        border-right: 6px solid #00F5D4;
-        margin-bottom: 18px;
+    .stApp {
+        background: linear-gradient(160deg, #07192F 0%, #0D2B4E 55%, #123C69 100%);
+        color: #EBF5FF;
+        direction: rtl;
+        text-align: right;
     }
-    .story-box {
-        background-color: #F0FDF9;
-        color: #0A192F;
-        padding: 16px;
+    .blue-card {
+        background: rgba(16, 52, 89, 0.78);
+        border: 1px solid rgba(103, 212, 255, 0.28);
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+        color: #F0F9FF;
+    }
+    .step-card {
+        background: rgba(9, 34, 62, 0.88);
+        border-right: 5px solid #38BDF8;
+        border-top: 1px solid rgba(125, 211, 252, 0.22);
+        border-bottom: 1px solid rgba(125, 211, 252, 0.22);
+        border-left: 1px solid rgba(125, 211, 252, 0.22);
         border-radius: 12px;
-        border: 1px solid #00C4A7;
-        margin: 12px 0;
+        padding: 18px 20px;
+        margin: 14px 0;
+        color: #F0F9FF;
+    }
+    .part-note {
+        background: rgba(14, 74, 110, 0.65);
+        border: 1px solid rgba(125, 211, 252, 0.35);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-top: 10px;
+        color: #E0F2FE;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# --- القائمة الجانبية للتنقل بين الأقسام ---
+# --- القائمة الجانبية ---
 st.sidebar.title("🧱 لَبِنَة | Labnah")
-st.sidebar.caption("من اللبنة.. تكتمل الفكرة")
-
-page = st.sidebar.radio(
-    "الأقسام",
+section = st.sidebar.radio(
+    "الأقسام:",
     [
-        "🏠 الرئيسية",
-        "📸 المسح واللبنات",
-        "🧪 المختبر والمساعد",
-        "🏆 ملفي",
+        "💡 أفكار المشاريع",
+        "🪜 مسار التنفيذ (خطوة بخطوة)",
+        "📸 المسح",
+        "🤖 اسأل عن قطعة",
     ],
 )
 
 st.sidebar.markdown("---")
+st.sidebar.write(f"**المشروع المختار:**\n{st.session_state.selected_project}")
 st.sidebar.metric("نقاط الشجاعة", f"{st.session_state.points} نقطة")
-st.sidebar.progress(min(len(st.session_state.completed_blocks) / 3, 1.0))
 
 # ==========================================
-# 1. الشاشة الرئيسية
+# 1. قسم أفكار المشاريع
 # ==========================================
-if page == "🏠 الرئيسية":
+if section == "💡 أفكار المشاريع":
+    st.title("💡 أفكار المشاريع")
     st.markdown(
         """
-        <div class="hero-box">
-            <h2>أهلاً بك يا صانع التقنية 🚀</h2>
-            <p>خطوتك اليوم تضعك ضمن فئة قليلة قررت تبني بإيدها وتفهم كيف تشتغل الأشياء خطوة بخطوة.</p>
+        <div class="blue-card">
+            اختر مشروعاً واحداً من المشاريع المتاحة لتبدأ العمل عليه خطوة بخطوة،
+            مع زر <strong>«التالي»</strong> للانتقال بعد إتمام كل خطوة.
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("المشروع الحالي", "سيارة تتفادى العقبات")
-    col2.metric("اللبنات المكتملة", f"{len(st.session_state.completed_blocks)} / 3")
-    col3.metric("رصيد النقاط", f"{st.session_state.points}")
-
-    st.subheader("اللبنة الجارية الآن")
-    st.info(f"**اللبنة الحالية:** {st.session_state.current_block}")
-    st.write(
-        "في هذه الخطوة تتعلم كيف تنتقل الإشارة من المتحكم إلى مشغل المحركات، "
-        "وليش نحتاج نضبط اتجاه الحركة قبل ما نربط حساس المسافة."
-    )
-
-# ==========================================
-# 2. المسح واللبنات
-# ==========================================
-elif page == "📸 المسح واللبنات":
-    st.title("📸 المسح واللبنات")
-    st.write("اختر القطع المتوفرة عندك أو ارفع صورة لها عشان نحدد اللبنات المناسبة لبدايتك.")
-
-    uploaded_img = st.file_uploader("ارفع صورة للقطع الموجودة أمامك (اختياري في النسخة التجريبية)", type=["png", "jpg", "jpeg"])
-    available_choices = st.multiselect(
-        "القطع المتوفرة حالياً:",
-        ["ESP32", "Arduino UNO", "L298N Motor Driver", "Ultrasonic Sensor", "DC Motors", "Jumper Wires"],
-        default=st.session_state.detected_parts,
-    )
-
-    if st.button("تحليل القطع وتحديث اللبنات"):
-        st.session_state.detected_parts = available_choices
-        if uploaded_img is not None:
-            st.success(f"تم استلام الصورة ({uploaded_img.name}) وتحديث قائمة القطع!")
-        else:
-            st.success("تم تحديث قائمة القطع المتوفرة بنجاح!")
-
-    st.markdown("### اللبنات المقترحة لمشروعك")
-
-    blocks_data = [
-        {
-            "name": "اللبنة 1: توصيل المحركات ببطاقة L298N",
-            "level": "مبتدئ",
-            "origin": (
-                "قبل ما تصير وحدات التحكم الصغيرة تتحكم بالمحركات بسهولة، كان التحكم في اتجاه "
-                "الدوران يحتاج مفاتيح ثقيلة ودوائر معقدة. فكرة الجسر الإلكتروني (H-Bridge) سمحت "
-                "بعكس اتجاه التيار بأمان، واليوم تطبق نفس المبدأ لتحريك سيارتك."
-            ),
-            "steps": [
-                "تأكد من فصل الطاقة قبل توصيل الأسلاك.",
-                "اربط مداخل التحكم (IN1, IN2) بأطراف الإخراج المحددة في المتحكم.",
-                "وحّد خط الأرضي (GND) بين المتحكم وبطاقة المحركات والمصدر.",
-            ],
-        },
-        {
-            "name": "اللبنة 2: قراءة المسافة بحساس الموجات فوق الصوتية",
-            "level": "مبتدئ",
-            "origin": (
-                "فكرة قياس المسافة بالصوت مستوحاة من الطبيعة (مثل الخفافيش والدلافين) التي ترسل "
-                "نبضة وتقيس زمن رجوع الصدى لتفهم محيطها دون لمس."
-            ),
-            "steps": [
-                "ثبّت الحساس في مقدمة السيارة بزاوية مستقيمة.",
-                "صِل أطراف Trigger و Echo بالمنافذ الرقمية المناسبة.",
-                "اختبر قراءة المسافة في الشاشة التسلسلية قبل ربطها بالحركة.",
-            ],
-        },
-    ]
-
-    for blk in blocks_data:
-        with st.expander(f"{blk['name']} — المستوى: {blk['level']}", expanded=True):
-            st.markdown(
-                f"""
-                <div class="story-box">
-                    <strong>📜 أصل الحكاية:</strong><br>
-                    {blk['origin']}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.write("**خطوات التنفيذ:**")
-            for idx, step in enumerate(blk["steps"], start=1):
-                st.write(f"{idx}. {step}")
-
-            if st.button(f"اعتماد هذه اللبنة كـ (جارية الآن)", key=blk["name"]):
-                st.session_state.current_block = blk["name"]
-                st.success(f"تم تعيين ({blk['name']}) كلبنة حالية.")
-
-# ==========================================
-# 3. المختبر والمساعد
-# ==========================================
-elif page == "🧪 المختبر والمساعد":
-    st.title("🧪 المختبر الذكي ومستشار الأخطاء")
-    st.write(f"أنت الآن تعمل على: **{st.session_state.current_block}**")
-
-    st.subheader("مخطط الفهم والمسار")
-    st.code(
-        """
-        [المتحكم (ESP32 / Arduino)]
-                 │
-                 ▼ (إشارة تحكم + GND مشترك)
-        [بطاقة تشغيل المحركات (L298N)]
-                 │
-                 ▼ (طاقة الحركة)
-        [المحركات والعجلات]
-        """,
-        language="text",
-    )
-
-    st.subheader("مستشار الأخطاء والأدلة العلمية")
-    issue_desc = st.text_area(
-        "وش واجهتك من مشكلة أو ملاحظة أثناء التجربة؟",
-        placeholder="مثال: المحرك ما يدور رغم إن اللمبات شغالة...",
-    )
-
-    if st.button("تشخيص المشكلة 🔍"):
-        if issue_desc.strip():
-            st.warning(
-                "**السبب المحتمل والدليل العلمي:** في كثير من مشاريع المحركات، عدم وجود أرضي مشترك (Common Ground) "
-                "أو انخفاض الجهد تحت حد التشغيل يسبب عدم استجابة المحرك. في الدوائر الكهربائية، فرق الجهد يُقاس "
-                "بالنسبة لنقطة مرجعية مشتركة، وبدونها تصبح الإشارة غير مستقرة."
-            )
-        else:
-            st.info("اكتب وصفاً مختصراً للمشكلة أولاً عشان نحللها لك.")
-
-    st.markdown("---")
-    st.subheader("توثيق لحظة النجاح ✨")
-    success_story = st.text_input(
-        "اكتب جملة تحفظ فيها وش تعلمته أو وش اللي ضبط معك:",
-        placeholder="مثال: عرفت إن توحيد الـ GND خلّى الإشارة توصل صح والمحرك اشتغل!",
-    )
-    earned_pts = st.slider("نقاط إنجاز هذه اللبنة", min_value=50, max_value=300, value=150, step=50)
-
-    if st.button("إتمام اللبنة وإضافة النقاط 🏆"):
-        note_text = success_story.strip() if success_story.strip() else "أنجزت اللبنة وطبقت الخطوات بنجاح."
-        st.session_state.completed_blocks.append(
-            {
-                "title": st.session_state.current_block,
-                "story_note": note_text,
-                "points": earned_pts,
-            }
-        )
-        st.session_state.points += earned_pts
-        st.balloons()
-        st.success(f"كفو! تمت إضافة {earned_pts} نقطة إلى ملفك الشخصي.")
-
-# ==========================================
-# 4. ملفي
-# ==========================================
-elif page == "🏆 ملفي":
-    st.title("🏆 ملف الإنجاز")
-
-    c1, c2 = st.columns(2)
-    c1.metric("إجمالي نقاط الشجاعة", f"{st.session_state.points} نقطة")
-    c2.metric("عدد اللبنات المنجزة", f"{len(st.session_state.completed_blocks)}")
-
-    st.subheader("الأوسمة")
-    badges = ["🏅 أول خطوة"]
-    if st.session_state.points >= 500:
-        badges.append("⚡ مثابر واصل")
-    if len(st.session_state.completed_blocks) >= 2:
-        badges.append("🧱 باني اللبنات")
-    st.write("  •  ".join(badges))
-
-    st.subheader("سجل اللبنات المنجزة وقصصها")
-    for item in reversed(st.session_state.completed_blocks):
+    for proj_name, proj_info in PROJECTS.items():
+        is_current = (proj_name == st.session_state.selected_project)
+        badge = " — ✅ المختار حالياً" if is_current else ""
         st.markdown(
             f"""
-            <div class="story-box">
-                <strong>✅ {item['title']}</strong> (+{item['points']} نقطة)<br>
-                <span>قصة الإنجاز: {item['story_note']}</span>
+            <div class="blue-card">
+                <h3>{proj_name}{badge}</h3>
+                <p><strong>المستوى:</strong> {proj_info['level']} | <strong>عدد الخطوات:</strong> {len(proj_info['steps'])}</p>
+                <p>{proj_info['summary']}</p>
             </div>
             """,
             unsafe_allow_html=True,
         )
+        if st.button(f"اختيار هذا المشروع: {proj_name}", key=f"btn_{proj_name}"):
+            st.session_state.selected_project = proj_name
+            st.session_state.step_index = 0
+            st.success(f"تم اختيار المشروع: {proj_name}. انتقل إلى قسم «مسار التنفيذ (خطوة بخطوة)» للبدء.")
+
+# ==========================================
+# 2. مسار التنفيذ (خطوة بخطوة + زر التالي)
+# ==========================================
+elif section == "🪜 مسار التنفيذ (خطوة بخطوة)":
+    proj_name = st.session_state.selected_project
+    steps = PROJECTS[proj_name]["steps"]
+    idx = st.session_state.step_index
+
+    st.title("🪜 مسار التنفيذ")
+    st.markdown(
+        f"""
+        <div class="blue-card">
+            <strong>المشروع الحالي:</strong> {proj_name}<br>
+            <strong>الخطوة:</strong> {idx + 1} من {len(steps)}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.progress((idx + 1) / len(steps))
+
+    current_step = steps[idx]
+    st.markdown(
+        f"""
+        <div class="step-card">
+            <h3>{current_step['title']}</h3>
+            <p><strong>المطلوب تنفيذه:</strong><br>{current_step['task']}</p>
+            <p><strong>نقطة التحقق قبل الانتقال:</strong><br>{current_step['check']}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    done_check = st.checkbox("أنهيت هذه الخطوة وتحققت منها")
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if idx > 0:
+            if st.button("⬅️ الخطوة السابقة"):
+                st.session_state.step_index -= 1
+                st.rerun()
+
+    with col2:
+        if idx < len(steps) - 1:
+            if st.button("التالي ➡️"):
+                if done_check:
+                    st.session_state.points += 50
+                st.session_state.step_index += 1
+                st.rerun()
+        else:
+            if st.button("إنهاء المشروع 🏆"):
+                if done_check:
+                    st.session_state.points += 100
+                st.balloons()
+                st.success("أتممت جميع خطوات المشروع بنجاح!")
+
+# ==========================================
+# 3. قسم المسح
+# ==========================================
+elif section == "📸 المسح":
+    st.title("📸 المسح")
+    st.markdown(
+        """
+        <div class="blue-card">
+            ارفع صورة للقطع أو حدد القطع الموجودة أمامك لتسجيلها ضمن أدواتك الحالية.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    uploaded_file = st.file_uploader("ارفع صورة للقطعة أو الأدوات", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        st.image(uploaded_file, caption=f"الصورة المرفوعة: {uploaded_file.name}", width=320)
+
+    selected_parts = st.multiselect(
+        "القطع المتوفرة لديك:",
+        list(PART_STORIES.keys()) + ["DC Motors", "Water Pump", "Python", "Streamlit", "GitHub"],
+        default=[p for p in st.session_state.scanned_parts if p in (list(PART_STORIES.keys()) + ["DC Motors", "Water Pump", "Python", "Streamlit", "GitHub"])],
+    )
+
+    if st.button("حفظ القطع الممسوحة"):
+        st.session_state.scanned_parts = selected_parts
+        st.success("تم حفظ القطع المحددة.")
+
+    if st.session_state.scanned_parts:
+        st.write("**القطع المسجلة حالياً:** " + "، ".join(st.session_state.scanned_parts))
+
+# ==========================================
+# 4. اسأل عن قطعة (فقط عند سؤال المبرمج)
+# ==========================================
+elif section == "🤖 اسأل عن قطعة":
+    st.title("🤖 اسأل عن قطعة")
+    st.markdown(
+        """
+        <div class="blue-card">
+            هذا القسم مخصص فقط إذا حبيت تسأل عن قطعة معينة؛ لن تظهر أي معلومات عن القطع إلا إذا اخترتها وسألت عنها.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    chosen_part = st.selectbox("اختر القطعة التي تريد السؤال عنها:", list(PART_STORIES.keys()))
+    question = st.text_input("اكتب سؤالك عن هذه القطعة (اختياري):")
+
+    if st.button("عرض معلومة القطعة"):
+        st.markdown(
+            f"""
+            <div class="part-note">
+                <strong>{chosen_part}</strong><br>
+                {PART_STORIES[chosen_part]}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if question.strip():
+            st.info(f"سؤالك حول «{chosen_part}»: {question.strip()}")
